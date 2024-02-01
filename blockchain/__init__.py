@@ -1,1 +1,1 @@
-from blockchain.chain import Blockchain, Account
+from blockchain.chain import Blockchain
