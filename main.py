@@ -1,9 +1,3 @@
-# from blockchain.block import Block
-# b = Block(previous_block="12039jegrig", index=1)
-# print(b)
-# print(vars(b))
-
-
 from blockchain import Blockchain
 
 
