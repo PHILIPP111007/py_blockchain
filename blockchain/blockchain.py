@@ -7,7 +7,7 @@ def get_current_time() -> float:
     return time.time()
 
 
-def compute_hash(b: bytes):
+def compute_hash(b: bytes) -> str:
     return hashlib.sha256(string=b, usedforsecurity=True).hexdigest()
 
 
@@ -39,7 +39,7 @@ class Transaction:
         self.timestamp = get_current_time()
 
     @property
-    def hash(self):
+    def hash(self) -> str:
         b: bytes = json.dumps(self.__dict__, sort_keys=True).encode()
         return compute_hash(b)
 
@@ -53,18 +53,18 @@ class Block:
         self.timestamp = get_current_time()
 
     @property
-    def hash(self):
+    def hash(self) -> str:
         b: bytes = json.dumps(self.__dict__, sort_keys=True).encode()
         return compute_hash(b)
 
 
 class Blockchain:
-    MAX_TRANSACTIONS_SIZE = 10
+    MAX_TRANSACTIONS_SIZE_IN_BLOCK = 10
 
     def __init__(self, name: str):
         self.name = name
         self.chain = []
-        self._append_block(self._create_initial_block())
+        self._append_block(self._create_block(initial=True))
 
     def __str__(self) -> str:
         return f"<Blockchain '{self.name}'>"
@@ -74,20 +74,52 @@ class Blockchain:
         return self.chain[-1]
 
     @property
-    def blocks_count(self):
+    def blocks_count(self) -> int:
         return len(self.chain)
 
     @property
     def last_transaction(self) -> Transaction | None:
-        return self.current_block.transactions[-1]
+        if self.current_block.transactions:
+            return self.current_block.transactions[-1]
+        return
 
-    def _create_initial_block(self):
-        return Block(index=0, previous_hash="")
+    def _create_block(self, initial: bool) -> Block:
+        if initial:
+            index = 0
+            previous_hash = ""
+        else:
+            index = self.current_block.index + 1
+            previous_hash = self.current_block.hash
 
-    def _create_block(self):
         return Block(
-            index=self.current_block.index + 1,
-            previous_hash=self.current_block.hash,
+            index=index,
+            previous_hash=previous_hash,
+        )
+
+    def _create_transaction(
+        self,
+        sender_public_key: str,
+        reciever_public_key: str,
+        PHC: float,
+        sender_PHC_total: float,
+        reciever_PHC_total: float,
+    ) -> Transaction:
+        last_transaction = self.last_transaction
+        if last_transaction is None:
+            index = 0
+            hash = ""
+        else:
+            index = last_transaction.index + 1
+            hash = last_transaction.hash
+
+        return Transaction(
+            index=index,
+            previous_hash=hash,
+            sender=sender_public_key,
+            reciever=reciever_public_key,
+            PHC=PHC,
+            sender_PHC_total=sender_PHC_total - PHC,
+            reciever_PHC_total=reciever_PHC_total + PHC,
         )
 
     def _append_block(self, block: Block):
@@ -103,7 +135,7 @@ class Blockchain:
                     return account
         return
 
-    def login(self, mnemonic: str, password: str) -> dict:
+    def login(self, mnemonic: str, password: str) -> dict[str, str]:
         account = Account(mnemonic=mnemonic, password=password)
         if self.get_account_by_public_key(public_key=account.public_key):
             return {
@@ -121,7 +153,7 @@ class Blockchain:
                     return transaction.reciever_PHC_total
         return 0.0
 
-    def add_account(self, mnemonic: str, password: str) -> dict:
+    def add_account(self, mnemonic: str, password: str) -> dict[str, str]:
         new_account = Account(mnemonic=mnemonic, password=password)
         if self.get_account_by_public_key(public_key=new_account.public_key):
             return {
@@ -139,7 +171,9 @@ class Blockchain:
         sender_password: str,
         reciever_public_key: str,
         PHC: float,
-    ):
+    ) -> dict[str, str] | Transaction:
+        PHC = float(PHC)
+
         sender_public_key = self.login(
             mnemonic=sender_mnemonic, password=sender_password
         ).get("public_key")
@@ -156,25 +190,19 @@ class Blockchain:
         if sender_PHC_total - PHC < 0:
             return {"error": "You do not have enough PHC."}
 
-        last_transaction = self.last_transaction
-        if last_transaction is None:
-            index = 0
-            hash = ""
-        else:
-            index = last_transaction.index
-            hash = last_transaction.previous_hash
-
-        transaction = Transaction(
-            index=index,
-            previous_hash=hash,
-            sender=sender_public_key,
-            reciever=reciever.public_key,
+        transaction = self._create_transaction(
+            sender_public_key=sender_public_key,
+            reciever_public_key=reciever.public_key,
             PHC=PHC,
-            sender_PHC_total=sender_PHC_total - PHC,
-            reciever_PHC_total=reciever_PHC_total + PHC,
+            sender_PHC_total=sender_PHC_total,
+            reciever_PHC_total=reciever_PHC_total,
         )
+
         self._append_transaction(transaction=transaction)
-        if len(self.current_block.transactions) >= Blockchain.MAX_TRANSACTIONS_SIZE:
-            block = self._create_block()
+        if (
+            len(self.current_block.transactions)
+            >= Blockchain.MAX_TRANSACTIONS_SIZE_IN_BLOCK
+        ):
+            block = self._create_block(initial=False)
             self._append_block(block=block)
         return transaction
