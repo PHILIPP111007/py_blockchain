@@ -26,7 +26,7 @@ sender_error = blockchain.add_account(
     mnemonic=sender_mnemonic, password=sender_password
 )
 print(f"{sender_error = }\n")
-# {'error': 'Please try again or use a new mnemonic. You have a hash collision.'}
+# {'error': 'Please use another mnemonic or password. You have a hash collision.'}
 
 reciever = blockchain.add_account(
     mnemonic=reciever_mnemonic, password=reciever_password

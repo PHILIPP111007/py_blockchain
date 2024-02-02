@@ -157,7 +157,7 @@ class Blockchain:
         new_account = Account(mnemonic=mnemonic, password=password)
         if self.get_account_by_public_key(public_key=new_account.public_key):
             return {
-                "error": "Please try again or use a new mnemonic. You have a hash collision."
+                "error": "Please use another mnemonic or password. You have a hash collision."
             }
         self.current_block.accounts.append(new_account)
         return {
