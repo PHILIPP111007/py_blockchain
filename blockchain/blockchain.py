@@ -54,7 +54,14 @@ class Block:
 
     @property
     def hash(self) -> str:
-        b: bytes = json.dumps(self.__dict__, sort_keys=True).encode()
+        transactions = [t.__dict__ for t in self.transactions]
+        accounts = [a.__dict__ for a in self.accounts]
+
+        obj = self.__dict__.copy()
+        obj["transactions"] = transactions
+        obj["accounts"] = accounts
+
+        b: bytes = json.dumps(obj, sort_keys=True).encode()
         return compute_hash(b)
 
 
@@ -134,6 +141,12 @@ class Blockchain:
                 if public_key == account.public_key:
                     return account
         return
+
+    def is_valid(self) -> tuple[bool, int]:
+        for i in range(1, self.blocks_count):
+            if self.chain[i - 1].hash != self.chain[i].previous_hash:
+                return False, i
+        return True, -1
 
     def login(self, mnemonic: str, password: str) -> dict[str, str]:
         account = Account(mnemonic=mnemonic, password=password)
