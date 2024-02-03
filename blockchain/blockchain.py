@@ -135,27 +135,18 @@ class Blockchain:
     def _append_transaction(self, transaction: Transaction):
         self.current_block.transactions.append(transaction)
 
-    def get_account_by_public_key(self, public_key: str) -> Account | None:
-        for block in self.chain:
-            for account in block.accounts:
-                if public_key == account.public_key:
-                    return account
-        return
-
     def is_valid(self) -> tuple[bool, int]:
         for i in range(1, self.blocks_count):
             if self.chain[i - 1].hash != self.chain[i].previous_hash:
                 return False, i
         return True, -1
 
-    def login(self, mnemonic: str, password: str) -> dict[str, str]:
-        account = Account(mnemonic=mnemonic, password=password)
-        if self.get_account_by_public_key(public_key=account.public_key):
-            return {
-                "success": "Login.",
-                "public_key": account.public_key,
-            }
-        return {"error": "Please try again."}
+    def get_account_by_public_key(self, public_key: str) -> Account | None:
+        for block in self.chain:
+            for account in block.accounts:
+                if public_key == account.public_key:
+                    return account
+        return
 
     def get_user_PHC_total(self, public_key: str) -> float:
         for block in self.chain[::-1]:
@@ -165,6 +156,15 @@ class Blockchain:
                 elif transaction.reciever == public_key:
                     return transaction.reciever_PHC_total
         return 0.0
+
+    def login(self, mnemonic: str, password: str) -> dict[str, str]:
+        account = Account(mnemonic=mnemonic, password=password)
+        if self.get_account_by_public_key(public_key=account.public_key):
+            return {
+                "success": "Login.",
+                "public_key": account.public_key,
+            }
+        return {"error": "Please try again."}
 
     def add_account(self, mnemonic: str, password: str) -> dict[str, str]:
         new_account = Account(mnemonic=mnemonic, password=password)

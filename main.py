@@ -1,7 +1,9 @@
 from blockchain import Blockchain
 
 
+##################################################
 # initialize blockchain
+##################################################
 sender_mnemonic = "mnemonic"
 sender_password = "password"
 reciever_mnemonic = "mnemonic1"
@@ -12,34 +14,46 @@ print(blockchain)
 # <Blockchain 'Phils_blockchain'>
 print(vars(blockchain.chain[0]))
 # {'index': 0, 'previous_hash': '', 'transactions': [], 'accounts': [], 'timestamp': 1706908397.994127}
+##################################################
+##################################################
 
+
+##################################################
 # Create user
+##################################################
 sender = blockchain.add_account(mnemonic=sender_mnemonic, password=sender_password)
 print(f"{sender = }\n")
 # {'success': 'Account has been created.', 'public_key': '20ed537f407342a57fa9de06f6fbbc194f16fac96977f9da0b4b8490cef35620'}
 
+##################################################
 # Get users total coins
+##################################################
 sender_public_key = sender.get("public_key")
 sender_PHC_total = blockchain.get_user_PHC_total(public_key=sender_public_key)
 print(f"{sender_PHC_total = }\n")
 # 0.0
 
+##################################################
 # Try to create an account that have mnemonic and password equal user 1
+##################################################
 sender_error = blockchain.add_account(
     mnemonic=sender_mnemonic, password=sender_password
 )
 print(f"{sender_error = }\n")
 # {'error': 'Please use another mnemonic or password. You have a hash collision.'}
 
+##################################################
 # Create second account
+##################################################
 reciever = blockchain.add_account(
     mnemonic=reciever_mnemonic, password=reciever_password
 )
 print(f"{reciever = }\n")
 # {'success': 'Account has been created.', 'public_key': '605ead40cc9a6535e68f20990bd6f580f37ba203f9e42c3e3fa0005115f108b9'}
 
-
+##################################################
 # Create our first transaction
+##################################################
 reciever_public_key = reciever.get("public_key")
 transaction = blockchain.add_transaction(
     sender_mnemonic=sender_mnemonic,
@@ -77,6 +91,9 @@ print(blockchain.chain[2].__dict__)
 print(blockchain.is_valid())
 # (True, -1)
 
+##################################################
+# Lets make changes in the chain
+##################################################
 error_block = blockchain.chain[-1]
 blockchain.chain[3] = error_block
 
